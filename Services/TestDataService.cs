@@ -56,45 +56,45 @@ public class TestDataService
 
     private async Task Stream(IMongoCollection<BsonDocument> collection, string filename, string id)
     {
-        LogMemoryUsage("streaming initial");
-        bool headerWritten = false;
-        int batchSize = 1000;
-        int skip = 0;
-
-        var writer = new StreamWriter($"downloads/{filename}");
-        var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture);
-
-        var count = await collection.CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty);
-        var estimatedTotalSizeMB = 0.0;
-        while (true)
+        try
         {
-            // Get total count as well to calculate the progress percentage (use facet aggregation)
-            var batch = await collection.Find(FilterDefinition<BsonDocument>.Empty).Skip(skip).Limit(batchSize).ToListAsync();
-            LogMemoryUsage("streaming middle");
-            if (batch.Count == 0)
-            {
-                break;
-            }
-            /*if (skip == 0)*/
-            /*{*/
-                /*long sampleSizeInBytes = batch.Sum(doc => doc.ToBson().Length);*/
-                /*double sampleSizePerDoc = batch.Count > 0 ? (double)sampleSizeInBytes / batch.Count : 0;*/
-                /*estimatedTotalSizeMB = (sampleSizePerDoc * count) / (1024.0 * 1024.0);*/
-                /*_logger.LogInformation($"{estimatedTotalSizeMB}");*/
-            /*}*/
-            WriteToCsv(csv, batch, headerWritten);
-            headerWritten = true;
-            await writer.FlushAsync();
-            skip += batchSize;
 
-            var progress = (100.0 * skip) / count;
-            progress = progress > 100 ? 100 : Math.Round(progress, 1);
-            _logger.LogInformation($"sending progress info: {progress}");
-            await _hub.Clients.All.SendAsync("Progress", new { Progress = progress, Id = id });
+            LogMemoryUsage("streaming initial");
+            bool headerWritten = false;
+            int batchSize = 1000;
+            int skip = 0;
+
+            var writer = new StreamWriter($"downloads/{filename}");
+            var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture);
+            var count = await collection.CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty);
+            while (true)
+            {
+                // Get total count as well to calculate the progress percentage (use facet aggregation)
+                var batch = await collection.Find(FilterDefinition<BsonDocument>.Empty).Skip(skip).Limit(batchSize).ToListAsync();
+                LogMemoryUsage("streaming middle");
+                if (batch.Count == 0)
+                {
+                    break;
+                }
+                WriteToCsv(csv, batch, headerWritten);
+                headerWritten = true;
+                await writer.FlushAsync();
+                skip += batchSize;
+
+                var progress = (100.0 * skip) / count;
+                progress = progress > 100 ? 100 : Math.Round(progress, 1);
+                _logger.LogInformation($"sending progress info: {progress}");
+                await _hub.Clients.All.SendAsync("Progress", new { Progress = progress, Id = id });
+            }
+            var fileUrl = $"{_hostName}/download/{filename}";
+            _logger.LogInformation($"sending complete event");
+            await _hub.Clients.All.SendAsync("Complete", new { FileUrl = fileUrl, Id = id });
         }
-        var fileUrl = $"{_hostName}/download/{filename}";
-        _logger.LogInformation($"sending complete event");
-        await _hub.Clients.All.SendAsync("Complete", new { FileUrl = fileUrl, Id = id });
+        catch (Exception e)
+        {
+            _logger.LogError($"error: {e.Message}");
+            await _hub.Clients.All.SendAsync("Error", new { Message = e.Message, Id = id });
+        }
     }
 
     private void WriteToCsv(CsvWriter csv, List<BsonDocument> data, bool headerWritten)
