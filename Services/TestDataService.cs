@@ -37,7 +37,7 @@ public class TestDataService
         var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture);
         bool headerWritten = false;
         WriteToCsv(csv, list, headerWritten);
-        return "http://localhost:5156/download/normal_output.csv";
+        return "http://192.168.10.83:5156/download/normal_output.csv";
     }
 
     public async Task StreamData(string id)
@@ -80,14 +80,15 @@ public class TestDataService
             if (connectionId != null)
             {
                 _logger.LogInformation($"sending progress info: {progress}");
-                await _hub.Clients.Client(connectionId).SendAsync("Progress", new { Progress = progress });
+                /*await _hub.Clients.Client(connectionId).SendAsync("Progress", new { Progress = progress });*/
+                await _hub.Clients.All.SendAsync("Progress", new { Progress = progress });
             }
         }
         if (connectionId != null)
         {
-            var fileUrl = "http://localhost:5156/download/output.csv";
+            var fileUrl = "http://192.168.10.83:5156/download/output.csv";
             _logger.LogInformation($"sending complete event");
-            await _hub.Clients.Client(connectionId).SendAsync("Complete", new { FileUrl = fileUrl});
+            await _hub.Clients.All.SendAsync("Complete", new { FileUrl = fileUrl});
         }
     }
 
