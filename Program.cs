@@ -7,15 +7,13 @@ using streaming_dotnet.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: MyAllowSpecificOrigins,
-                      policy =>
-                      {
-                          policy.WithOrigins("*");
-                      });
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
 });
 builder.Services.AddSignalR();
 builder.Services.AddControllers();
@@ -38,7 +36,7 @@ if (app.Environment.IsDevelopment())
 /*app.UseHttpsRedirection();*/
 
 app.UseAuthorization();
-app.UseCors(MyAllowSpecificOrigins);
+app.UseCors("AllowAll");
 app.MapControllers();
 app.MapHub<TestHub>("/test");
 app.UseStaticFiles(new StaticFileOptions
