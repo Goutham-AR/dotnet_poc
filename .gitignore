@@ -1,5 +1,6 @@
 *.swp
 *.*~
+downloads/
 project.lock.json
 .DS_Store
 *.pyc

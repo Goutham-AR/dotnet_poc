@@ -12,9 +12,11 @@ namespace streaming_dotnet.Services;
 public class TestDataService
 {
     private readonly IMongoCollection<BsonDocument> _collection;
+    private readonly IMongoCollection<BsonDocument> _collection2;
     private readonly ILogger<TestDataService> _logger;
     private readonly IHubContext<TestHub> _hub;
     private readonly UserService _userService;
+    private readonly string _hostName = "http://192.168.10.83:5156";
 
     public TestDataService(IOptions<TestDatabaseSettings> testDatabaseSettings, ILogger<TestDataService> logger, IHubContext<TestHub> hub, UserService service)
     {
@@ -24,6 +26,8 @@ public class TestDataService
         var mongoClient = new MongoClient(testDatabaseSettings.Value.ConnectionString);
         var mongoDatabase = mongoClient.GetDatabase(testDatabaseSettings.Value.DatabaseName);
         _collection = mongoDatabase.GetCollection<BsonDocument>(testDatabaseSettings.Value.CollectionName);
+        var mongoDatabase2 = mongoClient.GetDatabase("TestDatabase");
+        _collection2 = mongoDatabase2.GetCollection<BsonDocument>("TestCollection");
     }
 
     public async Task<string> GetData()
@@ -37,26 +41,35 @@ public class TestDataService
         var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture);
         bool headerWritten = false;
         WriteToCsv(csv, list, headerWritten);
-        return "http://192.168.10.83:5156/download/normal_output.csv";
+        return $"{_hostName}/download/normal_output.csv";
     }
 
-    public async Task StreamData(string id)
+    public async Task StreamData1()
     {
-        var connectionId = _userService.GetConnectionId(id);
+        await Stream(_collection, "output1.csv");
+    }
+
+    public async Task StreamData2()
+    {
+        await Stream(_collection2, "output2.csv");
+    }
+
+    private async Task Stream(IMongoCollection<BsonDocument> collection, string filename)
+    {
         LogMemoryUsage("streaming initial");
         bool headerWritten = false;
-        int batchSize = 500;
+        int batchSize = 1000;
         int skip = 0;
 
-        var writer = new StreamWriter("downloads/output.csv");
+        var writer = new StreamWriter($"downloads/{filename}");
         var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture);
 
-        var count = await _collection.CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty);
+        var count = await collection.CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty);
         var estimatedTotalSizeMB = 0.0;
         while (true)
         {
             // Get total count as well to calculate the progress percentage (use facet aggregation)
-            var batch = await _collection.Find(FilterDefinition<BsonDocument>.Empty).Skip(skip).Limit(batchSize).ToListAsync();
+            var batch = await collection.Find(FilterDefinition<BsonDocument>.Empty).Skip(skip).Limit(batchSize).ToListAsync();
             LogMemoryUsage("streaming middle");
             if (batch.Count == 0)
             {
@@ -68,7 +81,6 @@ public class TestDataService
                 double sampleSizePerDoc = batch.Count > 0 ? (double)sampleSizeInBytes / batch.Count : 0;
                 estimatedTotalSizeMB = (sampleSizePerDoc * count) / (1024.0 * 1024.0);
                 _logger.LogInformation($"{estimatedTotalSizeMB}");
-                break;
             }
             WriteToCsv(csv, batch, headerWritten);
             headerWritten = true;
@@ -77,19 +89,12 @@ public class TestDataService
 
             var progress = (100.0 * skip) / count;
             progress = progress > 100 ? 100 : Math.Round(progress, 1);
-            if (connectionId != null)
-            {
-                _logger.LogInformation($"sending progress info: {progress}");
-                /*await _hub.Clients.Client(connectionId).SendAsync("Progress", new { Progress = progress });*/
-                await _hub.Clients.All.SendAsync("Progress", new { Progress = progress });
-            }
+            _logger.LogInformation($"sending progress info: {progress}");
+            await _hub.Clients.All.SendAsync("Progress", new { Progress = progress });
         }
-        if (connectionId != null)
-        {
-            var fileUrl = "http://192.168.10.83:5156/download/output.csv";
-            _logger.LogInformation($"sending complete event");
-            await _hub.Clients.All.SendAsync("Complete", new { FileUrl = fileUrl});
-        }
+        var fileUrl = $"{_hostName}/download/{filename}";
+        _logger.LogInformation($"sending complete event");
+        await _hub.Clients.All.SendAsync("Complete", new { FileUrl = fileUrl });
     }
 
     private void WriteToCsv(CsvWriter csv, List<BsonDocument> data, bool headerWritten)

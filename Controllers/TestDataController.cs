@@ -16,15 +16,19 @@ public class StreamingController : ControllerBase
         _hub = hub;
     }
 
-    [HttpGet("streaming")]
+    [HttpGet("streaming1")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult DownloadFile([FromQuery] string id)
+    public IActionResult DownloadFile1()
     {
-        if (id == null)
-        {
-            return StatusCode(StatusCodes.Status400BadRequest);
-        }
-        _service.StreamData(id);
+        _service.StreamData1();
+        return Ok(new { Message = "Processing started"});
+    }
+
+    [HttpGet("streaming2")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult DownloadFile2()
+    {
+        _service.StreamData2();
         return Ok(new { Message = "Processing started"});
     }
 
