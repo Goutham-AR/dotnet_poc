@@ -7,8 +7,16 @@ using streaming_dotnet.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 // Add services to the container.
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("*");
+                      });
+});
 builder.Services.AddSignalR();
 builder.Services.AddControllers();
 builder.Services.Configure<TestDatabaseSettings>(builder.Configuration.GetSection("DatabaseSettings"));
@@ -30,14 +38,14 @@ if (app.Environment.IsDevelopment())
 /*app.UseHttpsRedirection();*/
 
 app.UseAuthorization();
-
+app.UseCors(MyAllowSpecificOrigins);
 app.MapControllers();
 app.MapHub<TestHub>("/test");
 app.UseStaticFiles(new StaticFileOptions
- {
-     FileProvider = new PhysicalFileProvider(
+{
+    FileProvider = new PhysicalFileProvider(
             Path.Combine(builder.Environment.ContentRootPath, "downloads")),
-     RequestPath = "/download"
- });
+    RequestPath = "/download"
+});
 
 app.Run();
