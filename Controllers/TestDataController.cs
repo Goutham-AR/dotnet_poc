@@ -20,16 +20,20 @@ public class StreamingController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult DownloadFile1()
     {
-        _service.StreamData1();
-        return Ok(new { Message = "Processing started"});
+        Guid guid = Guid.NewGuid();
+        string id = guid.ToString();
+        _service.StreamData1(id);
+        return Ok(new { Message = "Processing started", Id = id });
     }
 
     [HttpGet("streaming2")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult DownloadFile2()
     {
-        _service.StreamData2();
-        return Ok(new { Message = "Processing started"});
+        Guid guid = Guid.NewGuid();
+        string id = guid.ToString();
+        _service.StreamData2(id);
+        return Ok(new { Message = "Processing started", Id = id });
     }
 
     [HttpGet]

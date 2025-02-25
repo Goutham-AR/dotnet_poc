@@ -44,17 +44,17 @@ public class TestDataService
         return $"{_hostName}/download/normal_output.csv";
     }
 
-    public async Task StreamData1()
+    public async Task StreamData1(string id)
     {
-        await Stream(_collection, "output1.csv");
+        await Stream(_collection, "output1.csv", id);
     }
 
-    public async Task StreamData2()
+    public async Task StreamData2(string id)
     {
-        await Stream(_collection2, "output2.csv");
+        await Stream(_collection2, "output2.csv", id);
     }
 
-    private async Task Stream(IMongoCollection<BsonDocument> collection, string filename)
+    private async Task Stream(IMongoCollection<BsonDocument> collection, string filename, string id)
     {
         LogMemoryUsage("streaming initial");
         bool headerWritten = false;
@@ -90,11 +90,11 @@ public class TestDataService
             var progress = (100.0 * skip) / count;
             progress = progress > 100 ? 100 : Math.Round(progress, 1);
             _logger.LogInformation($"sending progress info: {progress}");
-            await _hub.Clients.All.SendAsync("Progress", new { Progress = progress });
+            await _hub.Clients.All.SendAsync("Progress", new { Progress = progress, Id = id });
         }
         var fileUrl = $"{_hostName}/download/{filename}";
         _logger.LogInformation($"sending complete event");
-        await _hub.Clients.All.SendAsync("Complete", new { FileUrl = fileUrl });
+        await _hub.Clients.All.SendAsync("Complete", new { FileUrl = fileUrl, Id = id });
     }
 
     private void WriteToCsv(CsvWriter csv, List<BsonDocument> data, bool headerWritten)
