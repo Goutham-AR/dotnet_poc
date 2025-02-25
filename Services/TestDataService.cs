@@ -75,13 +75,13 @@ public class TestDataService
             {
                 break;
             }
-            if (skip == 0)
-            {
-                long sampleSizeInBytes = batch.Sum(doc => doc.ToBson().Length);
-                double sampleSizePerDoc = batch.Count > 0 ? (double)sampleSizeInBytes / batch.Count : 0;
-                estimatedTotalSizeMB = (sampleSizePerDoc * count) / (1024.0 * 1024.0);
-                _logger.LogInformation($"{estimatedTotalSizeMB}");
-            }
+            /*if (skip == 0)*/
+            /*{*/
+                /*long sampleSizeInBytes = batch.Sum(doc => doc.ToBson().Length);*/
+                /*double sampleSizePerDoc = batch.Count > 0 ? (double)sampleSizeInBytes / batch.Count : 0;*/
+                /*estimatedTotalSizeMB = (sampleSizePerDoc * count) / (1024.0 * 1024.0);*/
+                /*_logger.LogInformation($"{estimatedTotalSizeMB}");*/
+            /*}*/
             WriteToCsv(csv, batch, headerWritten);
             headerWritten = true;
             await writer.FlushAsync();
