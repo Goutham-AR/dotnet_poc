@@ -38,7 +38,7 @@ public class TestDataService
         var list = await data.ToListAsync();
         LogMemoryUsage("normal middle");
 
-        var writer = new StreamWriter("downloads/normal_output.csv");
+        var writer = new StreamWriter("download/normal_output.csv");
         var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture);
         bool headerWritten = false;
         WriteToCsv(csv, list, headerWritten);
@@ -64,7 +64,7 @@ public class TestDataService
             int batchSize = 1000;
             int skip = 0;
 
-            var writer = new StreamWriter($"downloads/{filename}");
+            var writer = new StreamWriter($"download/{filename}");
             var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture);
             var count = await collection.CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty);
             while (true)

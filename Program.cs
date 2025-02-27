@@ -42,7 +42,7 @@ app.MapHub<TestHub>("/test");
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
-            Path.Combine(builder.Environment.ContentRootPath, "downloads")),
+            Path.Combine(builder.Environment.ContentRootPath, "download")),
     RequestPath = "/download"
 });
 
