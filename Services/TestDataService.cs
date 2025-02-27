@@ -45,12 +45,12 @@ public class TestDataService
         return $"{_hostName}/download/normal_output.csv";
     }
 
-    public void StreamData1(string id)
+    public async Task StreamData1(string id)
     {
         Stream(_collection, "output1.csv", id);
     }
 
-    public void StreamData2(string id)
+    public async Task StreamData2(string id)
     {
         Stream(_collection2, "output2.csv", id);
     }
@@ -64,7 +64,7 @@ public class TestDataService
             int batchSize = 1000;
             int skip = 0;
 
-            var writer = new StreamWriter($"download/{filename}");
+            var writer = new StreamWriter($"downloads/{filename}");
             var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture);
             var count = await collection.CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty);
             while (true)
@@ -93,7 +93,7 @@ public class TestDataService
         catch (Exception e)
         {
             _logger.LogError($"error: {e.Message}");
-            Thread.Sleep(2000);
+            await Task.Delay(2000);
             await _hub.Clients.All.SendAsync("Error", new { Message = e.Message, Id = id });
         }
     }
