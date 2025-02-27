@@ -2,6 +2,7 @@ using streaming_dotnet.Models;
 using streaming_dotnet.Hubs;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.SignalR;
+using System.Threading;
 
 using MongoDB.Driver;
 using MongoDB.Bson;
@@ -44,21 +45,20 @@ public class TestDataService
         return $"{_hostName}/download/normal_output.csv";
     }
 
-    public async Task StreamData1(string id)
+    public void StreamData1(string id)
     {
-        await Stream(_collection, "output1.csv", id);
+        Stream(_collection, "output1.csv", id);
     }
 
-    public async Task StreamData2(string id)
+    public void StreamData2(string id)
     {
-        await Stream(_collection2, "output2.csv", id);
+        Stream(_collection2, "output2.csv", id);
     }
 
     private async Task Stream(IMongoCollection<BsonDocument> collection, string filename, string id)
     {
         try
         {
-
             LogMemoryUsage("streaming initial");
             bool headerWritten = false;
             int batchSize = 1000;
@@ -93,6 +93,7 @@ public class TestDataService
         catch (Exception e)
         {
             _logger.LogError($"error: {e.Message}");
+            Thread.Sleep(2000);
             await _hub.Clients.All.SendAsync("Error", new { Message = e.Message, Id = id });
         }
     }
