@@ -2,7 +2,6 @@ using streaming_dotnet.Models;
 using streaming_dotnet.Hubs;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.SignalR;
-using System.Threading;
 
 using MongoDB.Driver;
 using MongoDB.Bson;
@@ -17,7 +16,7 @@ public class TestDataService
     private readonly ILogger<TestDataService> _logger;
     private readonly IHubContext<TestHub> _hub;
     private readonly UserService _userService;
-    private readonly string _hostName = "http://192.168.10.83:5156";
+    private readonly string _hostName = "https://192.168.10.83:7263";
 
     public TestDataService(IOptions<TestDatabaseSettings> testDatabaseSettings, ILogger<TestDataService> logger, IHubContext<TestHub> hub, UserService service)
     {
@@ -64,7 +63,7 @@ public class TestDataService
             int batchSize = 1000;
             int skip = 0;
 
-            var writer = new StreamWriter($"downloads/{filename}");
+            var writer = new StreamWriter($"download/{filename}");
             var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture);
             var count = await collection.CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty);
             while (true)
@@ -130,3 +129,4 @@ public class TestDataService
     }
 
 }
+

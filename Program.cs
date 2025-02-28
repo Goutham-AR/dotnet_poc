@@ -33,7 +33,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-/*app.UseHttpsRedirection();*/
+app.UseHttpsRedirection();
 
 app.UseAuthorization();
 app.UseCors("AllowAll");
@@ -47,3 +47,4 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.Run();
+
