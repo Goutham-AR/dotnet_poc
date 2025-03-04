@@ -24,8 +24,8 @@ builder.Services.AddSingleton<TestDataService>();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddHangfire(c => c.UseInMemoryStorage());
-builder.Services.AddHangfireServer();
+/*builder.Services.AddHangfire(c => c.UseInMemoryStorage());*/
+/*builder.Services.AddHangfireServer();*/
 
 var app = builder.Build();
 
