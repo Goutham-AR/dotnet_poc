@@ -26,8 +26,8 @@ public class StreamingController : ControllerBase
     {
         Guid guid = Guid.NewGuid();
         string id = guid.ToString();
-        _service.StreamData1(id, body.Format);
-        /*BackgroundJob.Enqueue(() => _service.StreamData1(id, body.Format));*/
+        /*_service.StreamData1(id, body.Format);*/
+        BackgroundJob.Enqueue(() => _service.StreamData1(id, body.Format));
         return Ok(new { Message = "Processing started", Id = id });
     }
 
@@ -39,7 +39,7 @@ public class StreamingController : ControllerBase
         Guid guid = Guid.NewGuid();
         string id = guid.ToString();
         _service.StreamData2(id, body.Format);
-        /*BackgroundJob.Enqueue(() => _service.StreamData2(id, body.Format));*/
+        BackgroundJob.Enqueue(() => _service.StreamData2(id, body.Format));
         return Ok(new { Message = "Processing started", Id = id });
     }
 }

@@ -72,8 +72,8 @@ public class TestDataService
     {
         if (format == "csv")
         {
-            await StreamUsingCursor(collection, filename, id);
-            /*await StreamCsv(collection, filename, id);*/
+            /*await StreamUsingCursor(collection, filename, id);*/
+            await StreamCsv(collection, filename, id);
         }
         else if (format == "xlsx")
         {
